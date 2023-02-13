@@ -28,7 +28,7 @@ const register = (0, async_handler_1.asyncHandler)(({ body }, res, next) => __aw
     const passwordHash = yield (0, bcrypt_handler_1.encrypt)(password);
     const response = yield (0, user_service_1.registerNewUser)({ email, passwordHash });
     res.status(201).send({
-        statusCode: 201,
+        statusCode: res.statusCode,
         error: false,
         message: 'Registration successful',
         response
@@ -42,10 +42,10 @@ const login = (0, async_handler_1.asyncHandler)(({ body }, res, next) => __await
         throw boom_1.default.notFound('User not found');
     const isCorrect = yield (0, bcrypt_handler_1.verify)(password, user.password);
     if (!isCorrect)
-        throw boom_1.default.unauthorized('Password incorrect');
+        throw boom_1.default.unauthorized();
     const token = (0, jwt_handler_1.generateToken)({ id: user._id });
     res.status(200).send({
-        statusCode: 200,
+        statusCode: res.statusCode,
         error: false,
         message: 'Login successful',
         response: {
@@ -58,53 +58,43 @@ const login = (0, async_handler_1.asyncHandler)(({ body }, res, next) => __await
     });
 }));
 exports.login = login;
-const recoveryPassword = ({ body }, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { email } = body;
-        const user = yield (0, user_service_1.findOneUserByEmail)(email);
-        if (!user)
-            throw boom_1.default.notFound('User not found');
-        const payload = { sub: user._id };
-        const token = (0, jwt_handler_1.generateToken)(payload, '15min');
-        const link = `${config_1.config.frontendUrl}/recovery?token=${token}`;
-        yield (0, user_service_1.updateOneUser)(user._id, { recoveryToken: token });
-        const mail = {
-            from: config_1.config.smtpEmail,
-            to: `${user.email}`,
-            subject: 'Email to recover password',
-            html: `<b>Click <a href="${link}" target="_blank">here</a> to redirect the page</b>`
-        };
-        const response = yield (0, email_handler_1.sendEmail)(mail);
-        res.status(200).send({
-            statusCode: 200,
-            message: response
-        });
-    }
-    catch (error) {
-        next(error);
-    }
-});
+const recoveryPassword = (0, async_handler_1.asyncHandler)(({ body }, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email } = body;
+    const user = yield (0, user_service_1.findOneUserByEmail)(email);
+    if (!user)
+        throw boom_1.default.notFound('User not found');
+    const payload = { sub: user._id };
+    const token = (0, jwt_handler_1.generateToken)(payload, '15min');
+    const link = `${config_1.config.frontendUrl}/recovery?token=${token}`;
+    yield (0, user_service_1.updateOneUser)(user._id, { recoveryToken: token });
+    const mail = {
+        from: config_1.config.smtpEmail,
+        to: `${user.email}`,
+        subject: 'Email to recover password',
+        html: `<b>Click <a href="${link}" target="_blank">here</a> to redirect the page</b>`
+    };
+    const response = yield (0, email_handler_1.sendEmail)(mail);
+    res.status(200).send({
+        statusCode: 200,
+        message: response
+    });
+}));
 exports.recoveryPassword = recoveryPassword;
-const changePassword = ({ body }, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { token, newPassword } = body;
-        const payload = (0, jwt_handler_1.verifyToken)(token);
-        const { sub } = payload;
-        const user = yield (0, user_service_1.findOneUserById)(sub);
-        if ((user === null || user === void 0 ? void 0 : user.recoveryToken) === null)
-            throw boom_1.default.unauthorized();
-        const passwordHash = yield (0, bcrypt_handler_1.encrypt)(newPassword);
-        yield (0, user_service_1.updateOneUser)(sub, {
-            recoveryToken: null,
-            password: passwordHash
-        });
-        res.status(200).send({
-            statusCode: res.statusCode,
-            message: 'Password changed successfully'
-        });
-    }
-    catch (error) {
-        next(error);
-    }
-});
+const changePassword = (0, async_handler_1.asyncHandler)(({ body }, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { token, newPassword } = body;
+    const payload = (0, jwt_handler_1.verifyToken)(token);
+    const { sub } = payload;
+    const user = yield (0, user_service_1.findOneUserById)(sub);
+    if ((user === null || user === void 0 ? void 0 : user.recoveryToken) === null)
+        throw boom_1.default.unauthorized();
+    const passwordHash = yield (0, bcrypt_handler_1.encrypt)(newPassword);
+    yield (0, user_service_1.updateOneUser)(sub, {
+        recoveryToken: null,
+        password: passwordHash
+    });
+    res.status(200).send({
+        statusCode: res.statusCode,
+        message: 'Password changed successfully'
+    });
+}));
 exports.changePassword = changePassword;

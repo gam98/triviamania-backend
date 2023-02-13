@@ -25,7 +25,7 @@ const register = asyncHandler(async ({ body }: Request, res: Response, next: Nex
   const response = await registerNewUser({ email, passwordHash })
 
   res.status(201).send({
-    statusCode: 201,
+    statusCode: res.statusCode,
     error: false,
     message: 'Registration successful',
     response
@@ -41,12 +41,12 @@ const login = asyncHandler(async ({ body }: Request, res: Response, next: NextFu
 
   const isCorrect = await verify(password, user.password)
 
-  if (!isCorrect) throw boom.unauthorized('Password incorrect')
+  if (!isCorrect) throw boom.unauthorized()
 
   const token = generateToken({ id: user._id })
 
   res.status(200).send({
-    statusCode: 200,
+    statusCode: res.statusCode,
     error: false,
     message: 'Login successful',
     response: {
@@ -59,66 +59,58 @@ const login = asyncHandler(async ({ body }: Request, res: Response, next: NextFu
   })
 })
 
-const recoveryPassword = async ({ body }: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { email } = body
+const recoveryPassword = asyncHandler(async ({ body }: Request, res: Response, next: NextFunction): Promise<void> => {
+  const { email } = body
 
-    const user = await findOneUserByEmail(email)
+  const user = await findOneUserByEmail(email)
 
-    if (!user) throw boom.notFound('User not found')
+  if (!user) throw boom.notFound('User not found')
 
-    const payload = { sub: user._id }
+  const payload = { sub: user._id }
 
-    const token = generateToken(payload, '15min')
+  const token = generateToken(payload, '15min')
 
-    const link = `${config.frontendUrl}/recovery?token=${token}`
+  const link = `${config.frontendUrl}/recovery?token=${token}`
 
-    await updateOneUser(user._id, { recoveryToken: token })
+  await updateOneUser(user._id, { recoveryToken: token })
 
-    const mail = {
-      from: config.smtpEmail,
-      to: `${user.email}`,
-      subject: 'Email to recover password',
-      html: `<b>Click <a href="${link}" target="_blank">here</a> to redirect the page</b>`
-    }
-
-    const response = await sendEmail(mail)
-
-    res.status(200).send({
-      statusCode: 200,
-      message: response
-    })
-  } catch (error) {
-    next(error)
+  const mail = {
+    from: config.smtpEmail,
+    to: `${user.email}`,
+    subject: 'Email to recover password',
+    html: `<b>Click <a href="${link}" target="_blank">here</a> to redirect the page</b>`
   }
-}
 
-const changePassword = async ({ body }: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { token, newPassword } = body
+  const response = await sendEmail(mail)
 
-    const payload = verifyToken(token)
+  res.status(200).send({
+    statusCode: 200,
+    message: response
+  })
+})
 
-    const { sub } = payload
+const changePassword = asyncHandler(async ({ body }: Request, res: Response, next: NextFunction): Promise<void> => {
+  const { token, newPassword } = body
 
-    const user = await findOneUserById(sub as UserDto['_id'])
+  const payload = verifyToken(token)
 
-    if (user?.recoveryToken === null) throw boom.unauthorized()
+  const { sub } = payload
 
-    const passwordHash = await encrypt(newPassword)
+  const user = await findOneUserById(sub as UserDto['_id'])
 
-    await updateOneUser(sub as UserDto['_id'], {
-      recoveryToken: null,
-      password: passwordHash
-    })
+  if (user?.recoveryToken === null) throw boom.unauthorized()
 
-    res.status(200).send({
-      statusCode: res.statusCode,
-      message: 'Password changed successfully'
-    })
-  } catch (error) {
-    next(error)
-  }
-}
+  const passwordHash = await encrypt(newPassword)
+
+  await updateOneUser(sub as UserDto['_id'], {
+    recoveryToken: null,
+    password: passwordHash
+  })
+
+  res.status(200).send({
+    statusCode: res.statusCode,
+    message: 'Password changed successfully'
+  })
+})
 
 export { register, login, recoveryPassword, changePassword }
