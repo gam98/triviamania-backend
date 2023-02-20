@@ -25,8 +25,8 @@ const getResultsCtrl = asyncHandler(async ({ user, query }: RequestExt, res: Res
 
   const { docs, prevPage, nextPage, offset: offsetResponse } = await getResults(options, user?.id)
 
-  const prevOffset = offsetResponse - 1
-  const nextOffset = offsetResponse + 1
+  const prevOffset = offsetResponse - 10
+  const nextOffset = offsetResponse + 10
 
   res.status(200).send({
     statusCode: res.statusCode,
