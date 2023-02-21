@@ -20,6 +20,7 @@ const boom_1 = __importDefault(require("@hapi/boom"));
 const config_1 = require("../config");
 const email_handler_1 = require("../utils/email.handler");
 const async_handler_1 = require("../middlewares/async.handler");
+const convertDaysToMiliseconds_handler_1 = require("../utils/convertDaysToMiliseconds.handler");
 const register = (0, async_handler_1.asyncHandler)(({ body }, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = body;
     const user = yield (0, user_service_1.findOneUserByEmail)(email);
@@ -44,7 +45,12 @@ const login = (0, async_handler_1.asyncHandler)(({ body }, res, next) => __await
     if (!isCorrect)
         throw boom_1.default.unauthorized();
     const token = (0, jwt_handler_1.generateToken)({ id: user._id });
-    res.status(200).send({
+    res.status(200).cookie('token', token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'none',
+        maxAge: (0, convertDaysToMiliseconds_handler_1.convertDaysInMiliseconds)(7)
+    }).json({
         statusCode: res.statusCode,
         error: false,
         message: 'Login successful',
@@ -52,8 +58,7 @@ const login = (0, async_handler_1.asyncHandler)(({ body }, res, next) => __await
             user: {
                 id: user._id,
                 email: user.email
-            },
-            token
+            }
         }
     });
 }));

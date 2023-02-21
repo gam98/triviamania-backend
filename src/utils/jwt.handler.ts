@@ -1,7 +1,7 @@
 import { JwtPayload, Secret, sign, verify } from 'jsonwebtoken'
 import { config } from '../config'
 
-const generateToken = (payload: {}, time: string = '2h'): string => {
+const generateToken = (payload: {}, time: string = '7d'): string => {
   const jwt = sign(payload, config.jwtSecret as Secret, {
     expiresIn: time
   })

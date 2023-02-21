@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import cookie from 'cookie-parser'
 import morgan from 'morgan'
 import { config } from './config'
 import { connection } from './config/db'
@@ -17,6 +18,8 @@ const app = express()
 app.use(morgan('dev'))
 
 app.use(express.json())
+
+app.use(cookie())
 
 app.use(cors())
 

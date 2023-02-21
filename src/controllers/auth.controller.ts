@@ -12,6 +12,7 @@ import { config } from '../config'
 import { sendEmail } from '../utils/email.handler'
 import { UserDto } from '../dto/auth.dto'
 import { asyncHandler } from '../middlewares/async.handler'
+import { convertDaysInMiliseconds } from '../utils/convertDaysToMiliseconds.handler'
 
 const register = asyncHandler(async ({ body }: Request, res: Response, next: NextFunction): Promise<void> => {
   const { email, password } = body
@@ -45,7 +46,12 @@ const login = asyncHandler(async ({ body }: Request, res: Response, next: NextFu
 
   const token = generateToken({ id: user._id })
 
-  res.status(200).send({
+  res.status(200).cookie('token', token, {
+    httpOnly: true,
+    secure: false, // just development, in production change to true
+    sameSite: 'none',
+    maxAge: convertDaysInMiliseconds(7)
+  }).json({
     statusCode: res.statusCode,
     error: false,
     message: 'Login successful',
@@ -53,8 +59,7 @@ const login = asyncHandler(async ({ body }: Request, res: Response, next: NextFu
       user: {
         id: user._id,
         email: user.email
-      },
-      token
+      }
     }
   })
 })
