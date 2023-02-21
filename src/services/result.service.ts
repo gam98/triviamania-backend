@@ -14,4 +14,9 @@ const getResults = async (options: Options, userId: Result['userId']): Promise<P
   return results
 }
 
-export { saveResult, getResults }
+const deleteAllResults = async (userId: Result['userId']): Promise<any> => {
+  const response = await ResultModel.deleteMany({ userId })
+  return response
+}
+
+export { saveResult, getResults, deleteAllResults }

@@ -8,6 +8,7 @@ import {
   updateOneUser
 } from '../services/user.service'
 import { asyncHandler } from '../middlewares/async.handler'
+import { deleteAllResults } from '../services/result.service'
 
 const changePasswordCtrl = asyncHandler(async ({ user, body }: RequestExt, res: Response, next: NextFunction): Promise<void> => {
   const userId = user?.id
@@ -38,6 +39,8 @@ const changePasswordCtrl = asyncHandler(async ({ user, body }: RequestExt, res: 
 
 const deleteUserCtrl = asyncHandler(async ({ user }: RequestExt, res: Response, next: NextFunction): Promise<void> => {
   const userId = user?.id
+
+  await deleteAllResults(userId)
 
   await deleteOneUser(userId)
 
