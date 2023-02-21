@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyToken = exports.generateToken = void 0;
 const jsonwebtoken_1 = require("jsonwebtoken");
 const config_1 = require("../config");
-const generateToken = (payload, time = '2h') => {
+const generateToken = (payload, time = '7d') => {
     const jwt = (0, jsonwebtoken_1.sign)(payload, config_1.config.jwtSecret, {
         expiresIn: time
     });
