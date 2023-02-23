@@ -1,7 +1,9 @@
 import { Router } from 'express'
+import passport from 'passport'
 import {
   changePassword,
   login,
+  provider,
   recoveryPassword,
   register
 } from '../controllers/auth.controller'
@@ -29,6 +31,19 @@ router.post(
   '/change-password',
   validatorHandler(changePasswordUserSchema, 'body'),
   changePassword
+)
+
+router.get(
+  '/google',
+  passport.authenticate('google', {
+    scope: ['email', 'profile']
+  })
+)
+
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { session: false }),
+  provider
 )
 
 export default router
