@@ -3,7 +3,9 @@ import {
   registerNewUser,
   findOneUserByEmail,
   updateOneUser,
-  findOneUserById
+  findOneUserById,
+  findOneUserByProvider,
+  socialLogin
 } from '../services/user.service'
 import { encrypt, verify } from '../utils/bcrypt.handler'
 import { generateToken, verifyToken } from '../utils/jwt.handler'
@@ -13,6 +15,8 @@ import { sendEmail } from '../utils/email.handler'
 import { UserDto } from '../dto/auth.dto'
 import { asyncHandler } from '../middlewares/async.handler'
 import { convertDaysInMiliseconds } from '../utils/convertDaysToMiliseconds.handler'
+import { RequestProvider } from '../interfaces/request-provider'
+import { v4 as uuidv4 } from 'uuid'
 
 const register = asyncHandler(async ({ body }: Request, res: Response, next: NextFunction): Promise<void> => {
   const { email, password } = body
@@ -48,7 +52,7 @@ const login = asyncHandler(async ({ body }: Request, res: Response, next: NextFu
 
   res.status(200).cookie('token', token, {
     httpOnly: true,
-    secure: false, // just development, in production change to true
+    secure: true, // just false in development, in production or browser change to true
     sameSite: 'none',
     maxAge: convertDaysInMiliseconds(7)
   }).json({
@@ -118,4 +122,43 @@ const changePassword = asyncHandler(async ({ body }: Request, res: Response, nex
   })
 })
 
-export { register, login, recoveryPassword, changePassword }
+const provider = asyncHandler(async (req: RequestProvider, res: Response, next: NextFunction) => {
+  const profile = req.user.profile
+
+  if (profile === null) throw boom.badGateway()
+
+  const userFound = await findOneUserByProvider({ provider: profile.provider, idProvider: profile.id })
+
+  if (userFound) {
+    const token = generateToken({ id: userFound._id })
+    return res.cookie('token', token, {
+      httpOnly: true,
+      secure: true, // just false in development, in production or browser change to true
+      sameSite: 'none',
+      maxAge: convertDaysInMiliseconds(7)
+    }).redirect('http://localhost:5173')
+  }
+
+  if (profile._json.email === undefined) throw boom.badRequest()
+
+  const user = {
+    email: profile._json.email,
+    password: uuidv4(),
+    idProvider: profile.id,
+    provider: profile.provider,
+    recoveryToken: null
+  }
+
+  const userCreated = await socialLogin(user)
+
+  const token = generateToken({ id: userCreated._id })
+
+  res.status(200).cookie('token', token, {
+    httpOnly: true,
+    secure: true, // just false in development, in production or browser change to true
+    sameSite: 'none',
+    maxAge: convertDaysInMiliseconds(7)
+  }).redirect('http://localhost:5173')
+})
+
+export { register, login, recoveryPassword, changePassword, provider }

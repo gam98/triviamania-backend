@@ -12,13 +12,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteOneUser = exports.updateOneUser = exports.findOneUserById = exports.findOneUserByEmail = exports.registerNewUser = void 0;
+exports.socialLogin = exports.findOneUserByProvider = exports.deleteOneUser = exports.updateOneUser = exports.findOneUserById = exports.findOneUserByEmail = exports.registerNewUser = void 0;
 const user_model_1 = __importDefault(require("../models/user.model"));
 const registerNewUser = ({ email, passwordHash }) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.default.create({
         password: passwordHash,
         email,
-        recoveryToken: null
+        recoveryToken: null,
+        idProvider: null,
+        provider: null
     });
     const userRegistered = {
         _id: user._id,
@@ -51,3 +53,19 @@ const deleteOneUser = (_id) => __awaiter(void 0, void 0, void 0, function* () {
     return userDeleted;
 });
 exports.deleteOneUser = deleteOneUser;
+const findOneUserByProvider = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    const userFound = yield user_model_1.default.findOne(data);
+    return userFound;
+});
+exports.findOneUserByProvider = findOneUserByProvider;
+const socialLogin = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.default.create(data);
+    const userRegistered = {
+        _id: user._id,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+    };
+    return userRegistered;
+});
+exports.socialLogin = socialLogin;

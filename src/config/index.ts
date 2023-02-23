@@ -11,5 +11,8 @@ export const config = {
   backendUrl: process.env.BACKEND_URL,
   pathStorage: process.env.PATH_STORAGE,
   smtpEmail: process.env.SMTP_EMAIL,
-  smtpPassword: process.env.SMTP_PASSWORD
+  smtpPassword: process.env.SMTP_PASSWORD,
+  oauthClientId: process.env.OAUTH_CLIENT_ID,
+  oauthClientSecret: process.env.OAUTH_CLIENT_SECRET,
+  callbackUrl: process.env.CALLBACK_URL
 }

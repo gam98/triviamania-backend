@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.changePassword = exports.recoveryPassword = exports.login = exports.register = void 0;
+exports.provider = exports.changePassword = exports.recoveryPassword = exports.login = exports.register = void 0;
 const user_service_1 = require("../services/user.service");
 const bcrypt_handler_1 = require("../utils/bcrypt.handler");
 const jwt_handler_1 = require("../utils/jwt.handler");
@@ -21,6 +21,7 @@ const config_1 = require("../config");
 const email_handler_1 = require("../utils/email.handler");
 const async_handler_1 = require("../middlewares/async.handler");
 const convertDaysToMiliseconds_handler_1 = require("../utils/convertDaysToMiliseconds.handler");
+const uuid_1 = require("uuid");
 const register = (0, async_handler_1.asyncHandler)(({ body }, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = body;
     const user = yield (0, user_service_1.findOneUserByEmail)(email);
@@ -103,3 +104,36 @@ const changePassword = (0, async_handler_1.asyncHandler)(({ body }, res, next) =
     });
 }));
 exports.changePassword = changePassword;
+const provider = (0, async_handler_1.asyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const profile = req.user.profile;
+    if (profile === null)
+        throw boom_1.default.badGateway();
+    const userFound = yield (0, user_service_1.findOneUserByProvider)({ provider: profile.provider, idProvider: profile.id });
+    if (userFound) {
+        const token = (0, jwt_handler_1.generateToken)({ id: userFound._id });
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            maxAge: (0, convertDaysToMiliseconds_handler_1.convertDaysInMiliseconds)(7)
+        }).redirect('http://localhost:5173');
+    }
+    if (profile._json.email === undefined)
+        throw boom_1.default.badRequest();
+    const user = {
+        email: profile._json.email,
+        password: (0, uuid_1.v4)(),
+        idProvider: profile.id,
+        provider: profile.provider,
+        recoveryToken: null
+    };
+    const userCreated = yield (0, user_service_1.socialLogin)(user);
+    const token = (0, jwt_handler_1.generateToken)({ id: userCreated._id });
+    res.status(200).cookie('token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        maxAge: (0, convertDaysToMiliseconds_handler_1.convertDaysInMiliseconds)(7)
+    }).redirect('http://localhost:5173');
+}));
+exports.provider = provider;
