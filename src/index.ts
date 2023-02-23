@@ -1,6 +1,8 @@
 import express from 'express'
 import cors from 'cors'
+import cookie from 'cookie-parser'
 import morgan from 'morgan'
+import passport from 'passport'
 import { config } from './config'
 import { connection } from './config/db'
 import routerApi from './routes/index'
@@ -9,6 +11,7 @@ import {
   errorHandler,
   boomErrorHandler
 } from './middlewares/error.handler'
+import { useGoogleStrategy } from './middlewares/authProvider.handler'
 
 void connection()
 
@@ -18,7 +21,16 @@ app.use(morgan('dev'))
 
 app.use(express.json())
 
-app.use(cors())
+app.use(cookie())
+
+app.use(passport.initialize())
+
+passport.use(useGoogleStrategy())
+
+app.use(cors({
+  origin: ['http://localhost:5173'],
+  credentials: true
+}))
 
 routerApi(app)
 

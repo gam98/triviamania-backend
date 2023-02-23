@@ -1,25 +1,35 @@
-import { NextFunction, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { RequestExt } from '../interfaces/request-ext'
-import { verifyToken } from '../utils/jwt.handler'
-import boom from '@hapi/boom'
+import jwt, { Secret } from 'jsonwebtoken'
+import { config } from '../config'
 
-const checkJwt = (req: RequestExt, res: Response, next: NextFunction): void => {
+const validateToken = (req: Request, res: Response, next: NextFunction): any => {
+  const token = req.cookies.token
+
+  if (!token) {
+    return res.status(403).json({
+      error: true,
+      message: 'A token is required for this process'
+    })
+  }
+
+  return verifyToken(token, req as RequestExt, res, next)
+}
+
+const verifyToken = (token: string, req: RequestExt, res: Response, next: NextFunction): any => {
   try {
-    const jwtByUser = req.headers.authorization ?? ''
+    const decoded = jwt.verify(`${token}`, config.jwtSecret as Secret) as { id: string }
 
-    const jwt = jwtByUser.split(' ').pop()
-
-    if (!jwt) return next(boom.unauthorized('Invalid token'))
-
-    const isUser = verifyToken(`${jwt}`) as { id: string }
-
-    req.user = isUser
+    req.user = decoded
 
     return next()
-  } catch (error) {
-    // return next(boom.badRequest('Invalid session'))
-    return next(error)
+  } catch ({ message, name }) {
+    return res.status(403).json({
+      error: true,
+      message,
+      type: name
+    })
   }
 }
 
-export default checkJwt
+export default validateToken
