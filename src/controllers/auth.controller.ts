@@ -169,7 +169,7 @@ const provider = asyncHandler(async (req: RequestProvider, res: Response, next: 
       secure: true, // just false in development, in production or browser change to true
       sameSite: 'none',
       maxAge: convertDaysInMiliseconds(7)
-    }).redirect('http://localhost:5173')
+    }).redirect(config.frontendUrl!)
   }
 
   if (profile._json.email === undefined) throw boom.badRequest()
