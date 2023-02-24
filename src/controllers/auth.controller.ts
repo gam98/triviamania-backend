@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { NextFunction, Request, Response } from 'express'
 import {
   registerNewUser,
@@ -190,7 +191,7 @@ const provider = asyncHandler(async (req: RequestProvider, res: Response, next: 
     secure: true, // just false in development, in production or browser change to true
     sameSite: 'none',
     maxAge: convertDaysInMiliseconds(7)
-  }).redirect('http://localhost:5173')
+  }).redirect(config.frontendUrl!)
 })
 
 export { register, login, recoveryPassword, changePassword, validate, logout, provider }
