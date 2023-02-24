@@ -141,6 +141,19 @@ const validate = asyncHandler(async ({ user }: RequestExt, res: Response, next: 
   })
 })
 
+const logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  res.status(200).cookie('token', '', {
+    expires: new Date(),
+    httpOnly: true,
+    sameSite: 'none',
+    secure: true
+  }).json({
+    statusCode: res.statusCode,
+    error: false,
+    message: 'Successfully logout '
+  })
+})
+
 const provider = asyncHandler(async (req: RequestProvider, res: Response, next: NextFunction) => {
   const profile = req.user.profile
 
@@ -180,4 +193,4 @@ const provider = asyncHandler(async (req: RequestProvider, res: Response, next: 
   }).redirect('http://localhost:5173')
 })
 
-export { register, login, recoveryPassword, changePassword, validate, provider }
+export { register, login, recoveryPassword, changePassword, validate, logout, provider }

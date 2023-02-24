@@ -3,6 +3,7 @@ import passport from 'passport'
 import {
   changePassword,
   login,
+  logout,
   provider,
   recoveryPassword,
   register,
@@ -39,6 +40,11 @@ router.get(
   '/validate',
   validateToken,
   validate
+)
+
+router.get(
+  '/logout',
+  logout
 )
 
 router.get(
