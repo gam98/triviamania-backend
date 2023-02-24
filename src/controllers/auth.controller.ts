@@ -142,7 +142,7 @@ const validate = asyncHandler(async ({ user }: RequestExt, res: Response, next: 
 })
 
 const logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  res.status(200).cookie('token', '', {
+  res.status(200).clearCookie('token', {
     expires: new Date(),
     httpOnly: true,
     sameSite: 'none',
