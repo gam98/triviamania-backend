@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import express from 'express'
 import cors from 'cors'
 import cookie from 'cookie-parser'
@@ -28,7 +29,7 @@ app.use(passport.initialize())
 passport.use(useGoogleStrategy())
 
 app.use(cors({
-  origin: ['http://localhost:5173'],
+  origin: [config.frontendUrl!],
   credentials: true
 }))
 

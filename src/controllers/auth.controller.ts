@@ -17,6 +17,7 @@ import { asyncHandler } from '../middlewares/async.handler'
 import { convertDaysInMiliseconds } from '../utils/convertDaysToMiliseconds.handler'
 import { RequestProvider } from '../interfaces/request-provider'
 import { v4 as uuidv4 } from 'uuid'
+import { RequestExt } from '../interfaces/request-ext'
 
 const register = asyncHandler(async ({ body }: Request, res: Response, next: NextFunction): Promise<void> => {
   const { email, password } = body
@@ -122,6 +123,24 @@ const changePassword = asyncHandler(async ({ body }: Request, res: Response, nex
   })
 })
 
+const validate = asyncHandler(async ({ user }: RequestExt, res: Response, next: NextFunction): Promise<void> => {
+  const userFound = await findOneUserById(user?.id)
+
+  if (!userFound) throw boom.unauthorized()
+
+  res.status(200).send({
+    statusCode: res.statusCode,
+    error: false,
+    message: 'Session validated',
+    response: {
+      user: {
+        id: userFound._id,
+        email: userFound.email
+      }
+    }
+  })
+})
+
 const provider = asyncHandler(async (req: RequestProvider, res: Response, next: NextFunction) => {
   const profile = req.user.profile
 
@@ -161,4 +180,4 @@ const provider = asyncHandler(async (req: RequestProvider, res: Response, next: 
   }).redirect('http://localhost:5173')
 })
 
-export { register, login, recoveryPassword, changePassword, provider }
+export { register, login, recoveryPassword, changePassword, validate, provider }

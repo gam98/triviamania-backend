@@ -5,8 +5,10 @@ import {
   login,
   provider,
   recoveryPassword,
-  register
+  register,
+  validate
 } from '../controllers/auth.controller'
+import validateToken from '../middlewares/session.handler'
 import validatorHandler from '../middlewares/validator.handler'
 import {
   changePasswordUserSchema,
@@ -31,6 +33,12 @@ router.post(
   '/change-password',
   validatorHandler(changePasswordUserSchema, 'body'),
   changePassword
+)
+
+router.get(
+  '/validate',
+  validateToken,
+  validate
 )
 
 router.get(
